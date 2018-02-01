@@ -4,6 +4,6 @@
   :license {:name "The MIT License (MIT)"
             :url "http://opensource.org/licenses/MIT"
             :comments "Copyright (c) 2018 Unbounce Marketing Solutions Inc."}
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [com.datadoghq/java-dogstatsd-client "2.4"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [com.datadoghq/java-dogstatsd-client "2.5"]]
   :global-vars {*warn-on-reflection* true})

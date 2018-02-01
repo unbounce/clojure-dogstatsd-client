@@ -1,7 +1,10 @@
 (ns com.unbounce.dogstatsd.core
   (:import [com.timgroup.statsd StatsDClient NonBlockingStatsDClient ServiceCheck]))
 
-(defonce ^:private * ^StatsDClient client nil)
+(defonce ^:private ^StatsDClient client nil)
+
+(defn str-array [tags]
+  (into-array String tags))
 
 (defn setup!
   "Sets up the statsd client.
@@ -28,27 +31,41 @@
 
 (defn increment
   [metric & {:keys [tags sample-rate]}]
-  (if sample-rate
-    (.incrementCounter client metric sample-rate tags)
-    (.incrementCounter client metric tags)))
+  (let [tags (str-array tags)]
+    (if sample-rate
+      (.incrementCounter client metric sample-rate tags)
+      (.incrementCounter client metric tags))))
 
 (defn decrement
   [metric & {:keys [tags sample-rate]}]
+  (let [tags (str-array tags)]
   (if sample-rate
     (.decrementCounter client metric sample-rate tags)
-    (.decrementCounter client metric tags)))
+    (.decrementCounter client metric tags))))
 
 (defn gauge
-  [^String metric ^double value {:keys [^double sample-rate #^"[Ljava.lang.String;" tags]}]
-  (if sample-rate
-    (.recordGaugeValue client metric value sample-rate tags)
-    (.recordGaugeValue client metric value tags)))
+  [metric value {:keys [sample-rate tags]}]
+  (let [value       (double value)
+        tags        (str-array tags)
+        sample-rate (when sample-rate (double sample-rate))
+        f           (fn [^String metric ^double value {:keys [^double sample-rate #^"[Ljava.lang.String;" tags]}]
+                      (if sample-rate
+                        (.recordGaugeValue client metric value sample-rate tags)
+                        (.recordGaugeValue client metric value tags)))]
+    (f metric value {:sample-rate sample-rate
+                     :tags tags})))
 
 (defn histogram
-  [^String metric ^double value {:keys [^double sample-rate  #^"[Ljava.lang.String;" tags]}]
-  (if sample-rate
-    (.recordHistogramValue client metric value sample-rate tags)
-    (.recordHistogramValue client metric value tags)))
+  [metric value {:keys [sample-rate tags]}]
+  (let [value       (double value)
+        tags        (str-array tags)
+        sample-rate (when sample-rate (double sample-rate))
+        f           (fn [^String metric ^double value {:keys [^double sample-rate  #^"[Ljava.lang.String;" tags]}]
+                      (if sample-rate
+                        (.recordHistogramValue client metric value sample-rate tags)
+                        (.recordHistogramValue client metric value tags)))]
+    (f metric value {:sample-rate sample-rate
+                     :tags        tags})))
 
 (defmacro time!
   "Times the body and submits the execution time to metric"
@@ -80,7 +97,3 @@
 (defn set-value
   [metric value {:keys [tags]}]
   (.recordSetValue client metric value tags))
-
-(comment
-  (setup!)
-  )
