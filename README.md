@@ -1,7 +1,7 @@
 # clojure-statsd-client
 
 ```
-[com.unbounce/clojure-dogstatsd-client "0.1.0-SNAPSHOT"]
+[com.unbounce/clojure-dogstatsd-client "0.1.0"]
 ```
 
 [![Clojars Project](https://img.shields.io/clojars/v/com.unbounce/clojure-dogstatsd-client.svg)](https://clojars.org/com.unbounce/clojure-dogstatsd-client)
