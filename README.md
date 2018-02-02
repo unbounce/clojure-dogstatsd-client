@@ -22,6 +22,7 @@ Somewhere in your code, you should setup the client:
 (require '[com.unbounce.dogstatsd.core :as statsd])
 
 ;; Do this once in your code
+;; Or statd calls will default to use NoOpStatsDClient to avoid nullpointer exception
 (statsd/setup! :host "127.0.0.1" :port 8125 :prefix "my.app")
 
 ;; Increment or derement a counter

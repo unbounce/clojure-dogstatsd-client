@@ -1,7 +1,9 @@
 (ns com.unbounce.dogstatsd.core
-  (:import [com.timgroup.statsd StatsDClient NonBlockingStatsDClient ServiceCheck]))
+  (:import [com.timgroup.statsd StatsDClient NonBlockingStatsDClient ServiceCheck NoOpStatsDClient]))
 
-(defonce ^:private ^StatsDClient client nil)
+;; In case setup! is not called, this prevents nullpointer exceptions i.e. Unit tests
+(defonce ^:private ^StatsDClient client
+  (NoOpStatsDClient.))
 
 (defn str-array [tags]
   (into-array String tags))
