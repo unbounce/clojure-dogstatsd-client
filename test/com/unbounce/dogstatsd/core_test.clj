@@ -6,7 +6,7 @@
 
 (s/def ::sample-rate number?)
 (s/def ::tags (s/coll-of string?))
-(s/def ::opts (s/keys :req-un [::tags ::sample-rate]))
+(s/def ::opts (s/keys :opt-un [::tags ::sample-rate]))
 
 (s/fdef sut/str-array
         :args (s/cat :tags ::tags)
@@ -14,32 +14,26 @@
 
 (s/fdef sut/increment
         :args (s/cat :metric string?
-                     :opts (s/* (s/alt :_ (s/cat :_ (partial = :tags)
-                                                 :_ ::tags)
-                                       :_ (s/cat :_ (partial = :sample-rate)
-                                                 :_ ::sample-rate))))
+                     :opts (s/? ::opts))
         :ret nil?)
 
 (s/fdef sut/decrement
         :args (s/cat :metric string?
-                     :opts (s/* (s/alt :_ (s/cat :_ (partial = :tags)
-                                                 :_ ::tags)
-                                       :_ (s/cat :_ (partial = :sample-rate)
-                                                 :_ ::sample-rate))))
+                     :opts (s/? ::opts))
         :ret nil?)
 
 
 (s/fdef sut/gauge
         :args (s/cat :metric string?
                      :value number?
-                     :opts ::opts)
+                     :opts (s/? ::opts))
         :ret nil?)
 
 
 (s/fdef sut/histogram
         :args (s/cat :metric string?
                      :value number?
-                     :opts ::opts)
+                     :opts (s/? ::opts))
         :ret nil?)
 
 (t/deftest datadog-statsd-metrics
@@ -59,7 +53,14 @@
     (stest/check `sut/histogram)
 
     (t/are [x y] (= x y)
-      nil (sut/increment "asdf" :tags ["asdf"] :sample-rate 1)
-      nil (sut/decrement "asdf" :tags ["asdf"] :sample-rate 1)
+      nil (sut/increment "asdf")
+      nil (sut/increment "asdf" {:tags ["asdf"] :sample-rate 1})
+
+      nil (sut/decrement "asdf")
+      nil (sut/decrement "asdf" {:tags ["asdf"] :sample-rate 1})
+
+      nil (sut/gauge "asdf" 20)
       nil (sut/gauge "asdf" 20 {:tags ["asdf" "asdf"] :sample-rate 1})
+
+      nil (sut/histogram "asdf" 20)
       nil (sut/histogram "asdf" 20 {:tags ["asdf" "asdf"] :sample-rate 1}))))
