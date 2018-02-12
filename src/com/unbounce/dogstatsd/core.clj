@@ -5,10 +5,11 @@
             ServiceCheck ServiceCheck$Status]))
 
 ;; In case setup! is not called, this prevents nullpointer exceptions i.e. Unit tests
-(defonce ^:private ^StatsDClient client
-  (NoOpStatsDClient.))
+(defonce ^:private ^StatsDClient client (NoOpStatsDClient.))
 
-(defn str-array [tags]
+(def ^:private ^"[Ljava.lang.String;" -empty-array (into-array String []))
+
+(defn ^"[Ljava.lang.String;" str-array [tags]
   (into-array String tags))
 
 (defn setup!
@@ -35,46 +36,58 @@
                                tags)))))
 
 (defn increment
-  [metric & {:keys [tags sample-rate]}]
-  (let [tags (str-array tags)]
-    (if sample-rate
-      (.incrementCounter client metric sample-rate tags)
-      (.incrementCounter client metric tags))))
+  ([metric]
+   (.incrementCounter client metric -empty-array))
+  ([metric {:keys [tags sample-rate]}]
+   (let [tags (str-array tags)]
+     (if sample-rate
+       (.incrementCounter client metric sample-rate tags)
+       (.incrementCounter client metric tags)))))
 
 (defn decrement
-  [metric & {:keys [tags sample-rate]}]
-  (let [tags (str-array tags)]
-  (if sample-rate
-    (.decrementCounter client metric sample-rate tags)
-    (.decrementCounter client metric tags))))
+  ([metric]
+   (.decrementCounter client metric -empty-array))
+  ([metric {:keys [tags sample-rate]}]
+   (let [tags (str-array tags)]
+     (if sample-rate
+       (.decrementCounter client metric sample-rate tags)
+       (.decrementCounter client metric tags)))))
 
 (defn gauge
-  [metric value {:keys [sample-rate tags]}]
-  (let [value       (double value)
-        tags        (str-array tags)
-        sample-rate (when sample-rate (double sample-rate))
-        f           (fn [^String metric ^double value {:keys [^double sample-rate #^"[Ljava.lang.String;" tags]}]
-                      (if sample-rate
-                        (.recordGaugeValue client metric value sample-rate tags)
-                        (.recordGaugeValue client metric value tags)))]
-    (f metric value {:sample-rate sample-rate
-                     :tags tags})))
+  ([^String metric ^Double value]
+   (.recordGaugeValue client metric value -empty-array))
+  ([^String metric ^Double value {:keys [sample-rate tags]}]
+   (let [tags        (str-array tags)
+         sample-rate ^Double sample-rate]
+     (if sample-rate
+       (.recordGaugeValue client metric value sample-rate tags)
+       (.recordGaugeValue client metric value tags)))))
 
 (defn histogram
-  [metric value {:keys [sample-rate tags]}]
-  (let [value       (double value)
-        tags        (str-array tags)
-        sample-rate (when sample-rate (double sample-rate))
-        f           (fn [^String metric ^double value {:keys [^double sample-rate  #^"[Ljava.lang.String;" tags]}]
-                      (if sample-rate
-                        (.recordHistogramValue client metric value sample-rate tags)
-                        (.recordHistogramValue client metric value tags)))]
-    (f metric value {:sample-rate sample-rate
-                     :tags        tags})))
+  ([^String metric ^Double value]
+   (.recordHistogramValue client metric value -empty-array))
+  ([^String metric ^Double value {:keys [sample-rate tags]}]
+   (let [tags        (str-array tags)
+         sample-rate ^Double sample-rate]
+     (if sample-rate
+       (.recordHistogramValue client metric value sample-rate tags)
+       (.recordHistogramValue client metric value tags)))))
 
 (defmacro time!
-  "Times the body and submits the execution time to metric"
-  [metric opts & body]
+  "Times the body and records the execution time (in msecs) as a histogram.
+
+  Takes opts is a map of :sample-rate and :tags to apply to the histogram
+
+  Examples:
+
+  (statsd/time! [\"my.metric\"]
+    (Thread/sleep 1000))
+
+  (statsd/time! [\"my.metric.with.tags\" {:tags #{\"foo\" :sample-rate 0.3}}]
+    (Thread/sleep 1000))
+
+  "
+  [[metric opts] & body]
   `(let [t0#  (System/currentTimeMillis)
          res# (do ~@body)]
      (histogram ~metric (- (System/currentTimeMillis) t0#) ~opts)
