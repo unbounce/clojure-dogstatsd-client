@@ -44,8 +44,6 @@
     (stest/instrument `sut/gauge)
     (stest/instrument `sut/histogram)
 
-    (sut/setup!)
-
     (stest/check `sut/str-array)
     (stest/check `sut/increment)
     (stest/check `sut/decrement)
