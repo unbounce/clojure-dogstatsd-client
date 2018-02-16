@@ -5,36 +5,31 @@
             [clojure.spec.test.alpha :as stest]))
 
 (s/def ::sample-rate number?)
-(s/def ::tags (s/coll-of string?))
+(s/def ::metric string?)
+(s/def ::tags (s/coll-of string? :kind vector?))
 (s/def ::opts (s/keys :req-un [::tags ::sample-rate]))
+(s/def ::opts* (s/keys* :req-un [::tags ::sample-rate]))
 
 (s/fdef sut/str-array
-        :args (s/cat :tags ::tags)
+        :args (s/or :tags (s/cat :tags ::tags)
+                    :no-tag (s/cat :tags nil?))
         :ret #(instance? java.lang.Object %))
 
 (s/fdef sut/increment
-        :args (s/cat :metric string?
-                     :opts (s/* (s/alt :_ (s/cat :_ (partial = :tags)
-                                                 :_ ::tags)
-                                       :_ (s/cat :_ (partial = :sample-rate)
-                                                 :_ ::sample-rate))))
+        :args (s/cat :metric ::metric
+                     :opts ::opts*)
         :ret nil?)
 
 (s/fdef sut/decrement
-        :args (s/cat :metric string?
-                     :opts (s/* (s/alt :_ (s/cat :_ (partial = :tags)
-                                                 :_ ::tags)
-                                       :_ (s/cat :_ (partial = :sample-rate)
-                                                 :_ ::sample-rate))))
+        :args (s/cat :metric ::metric
+                     :opts ::opts*)
         :ret nil?)
-
 
 (s/fdef sut/gauge
         :args (s/cat :metric string?
                      :value number?
                      :opts ::opts)
         :ret nil?)
-
 
 (s/fdef sut/histogram
         :args (s/cat :metric string?
@@ -49,8 +44,6 @@
     (stest/instrument `sut/decrement)
     (stest/instrument `sut/gauge)
     (stest/instrument `sut/histogram)
-
-    (sut/setup!)
 
     (stest/check `sut/str-array)
     (stest/check `sut/increment)
