@@ -1,5 +1,8 @@
 (ns com.unbounce.dogstatsd.core
-  (:import [com.timgroup.statsd StatsDClient NonBlockingStatsDClient ServiceCheck NoOpStatsDClient]))
+  (:import [com.timgroup.statsd
+            StatsDClient NonBlockingStatsDClient NoOpStatsDClient
+            Event Event$Priority Event$AlertType
+            ServiceCheck ServiceCheck$Status]))
 
 ;; In case setup! is not called, this prevents nullpointer exceptions i.e. Unit tests
 (defonce ^:private ^StatsDClient client
@@ -77,25 +80,74 @@
      (histogram ~metric (- (System/currentTimeMillis) t0#) ~opts)
      res#))
 
-;; (defn event
-;;   [event {:keys [tags]}]
-;;   (.recordEvent event tags))
+(defn event
+  "Records an Event.
 
-;; (defn service-check [{:keys [name hostname message check-run-id timestamp status tags]}]
-;;   (let [service-check
-;;         (-> (com.timgroup.statsd.ServiceCheck/builder)
-;;             (.withName name)
-;;             (.withHostname hostname)
-;;             (.withMessage message)
-;;             (.withCheckRunId check-run-id)
-;;             (.withTimestamp timestamp)
-;;             (.withStatus (when status
-;;                            (com.timgroup.statsd.ServiceCheck$Status/valueOf
-;;                             (clojure.core/name status))))
-;;             (.withTags tags)
-;;             (.build))]
-;;     (.recordServiceCheckRun client service-check)))
+  This is a datadog extension, and may not work with other servers.
+
+  See http://docs.datadoghq.com/guides/dogstatsd/#events-1
+
+  Note:
+  :date can either be inst? or msecs
+  :priority can be either :normal or :low
+  "
+  [{:keys [title text timestamp hostname aggregation-key priority source-type-name alert-type]} tags]
+  {:pre [(not (nil? title)) (not (nil? text))]}
+  (let [timestamp (or timestamp -1)
+        event (-> (Event/builder)
+                  (.withTitle title)
+                  (.withText text)
+                  (.withHostname hostname)
+                  (.withAggregationKey aggregation-key)
+                  (.withPriority (if priority
+                                   (Event$Priority/valueOf
+                                    (name priority))
+                                   Event$Priority/NORMAL))
+                  (.withSourceTypeName source-type-name)
+                  (.withAlertType (if alert-type
+                                    (Event$AlertType/valueOf
+                                     (name source-type-name))
+                                    Event$AlertType/INFO))
+                  (.withDate ^long timestamp)
+                  (.build))]
+    (.recordEvent client event (str-array tags))))
+
+(defn service-check
+  "Records a ServiceCheck. This is a datadog extension, and may not work with
+  other servers.
+
+  See https://docs.datadoghq.com/agent/agent_checks/#sending-service-checks
+
+  At minimum, the name and status is required in the payload.
+  "
+  [{:keys [name status hostname message check-run-id timestamp]} tags]
+  {:pre [(not (nil? name)) (not (nil? status))]}
+  (let [service-check
+        (-> (com.timgroup.statsd.ServiceCheck/builder)
+            (.withName name)
+            (.withStatus (case status
+                           :ok       ServiceCheck$Status/OK
+                           :warning  ServiceCheck$Status/WARNING
+                           :critical ServiceCheck$Status/CRITICAL
+                           :unknown  ServiceCheck$Status/UNKNOWN))
+            (.withHostname hostname)
+            (.withMessage message)
+            (.withCheckRunId (or check-run-id 0))
+            (.withTimestamp (or timestamp 0))
+            (.withTags (str-array tags))
+            (.build))]
+    (.recordServiceCheckRun client service-check)))
 
 (defn set-value
   [metric value {:keys [tags]}]
   (.recordSetValue client metric value tags))
+
+(comment
+  (setup!)
+
+  (event {:title "foo" :text "things are bad\nfoo"} nil)
+
+  (service-check {:name "hi" :status :warning} nil)
+  (service-check {:name "hi" :status :ok :timestamp 10 :check-run-id 123 :message "foo" :hostname "blah"} nil)
+
+  )
