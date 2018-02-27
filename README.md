@@ -1,9 +1,5 @@
 # clojure-statsd-client
 
-```
-[com.unbounce/clojure-dogstatsd-client "0.1.1"]
-```
-
 [![Clojars Project](https://img.shields.io/clojars/v/com.unbounce/clojure-dogstatsd-client.svg)](https://clojars.org/com.unbounce/clojure-dogstatsd-client) [![CircleCI](https://circleci.com/gh/unbounce/clojure-dogstatsd-client/tree/master.svg?style=svg)](https://circleci.com/gh/unbounce/clojure-dogstatsd-client/tree/master)
 
 A thin veneer over the officia Java dogstatsd
