@@ -37,6 +37,39 @@ Somewhere in your code, you should setup the client:
   (Thread/sleep 100))
 ```
 
+### Ring Middleware
+
+This library also has comes with a ring middleware to capture HTTP requests.
+See `com.unbounce.dogstatsd.ring` for more information.
+
+The middleware provides these metrics:
+
+- http.1xx  counter of 1xx responses
+- http.2xx  counter of 2xx responses
+- http.3xx  counter of 3xx responses
+- http.4xx  counter of 4xx responses
+- http.5xx  counter of 5xx responses
+- http.count     counter for total requests
+- http.exception counter for exceptions raised
+- http.duration  histogram of request duration
+
+Usage:
+
+```
+(require '[com.unbounce.dogstatsd.ring :as dogstatsd.ring])
+
+;; by default instrument all requests
+(def handler (-> (constantly {:status 200})
+                 (dogstatsd.ring/wrap-http-metrics)))
+
+;; when sample-rate is set, only 20% of requests will be instrumented
+(def handler (-> (constantly {:status 200})
+                 (dogstatsd.ring/wrap-http-metrics {:sample-rate 0.2})))
+                 
+```
+
+
+
 ## License
 
 Copyright © 2018 Unbounce Marketing Solutions Inc.
