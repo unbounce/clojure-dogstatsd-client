@@ -87,6 +87,7 @@
     (Thread/sleep 1000))
 
   "
+  {:style/indent 1}
   [[metric opts] & body]
   `(let [t0#  (System/currentTimeMillis)
          res# (do ~@body)]
