@@ -1,7 +1,7 @@
 (ns com.unbounce.dogstatsd.core-test
   (:require [clojure.spec.alpha :as s]
             [com.unbounce.dogstatsd.core :as sut]
-            [clojure.test :as t]
+            [clojure.test :refer [deftest testing is are] :as t]
             [clojure.spec.test.alpha :as stest]))
 
 (s/def ::sample-rate number?)
@@ -36,8 +36,8 @@
                      :opts (s/? ::opts))
         :ret nil?)
 
-(t/deftest datadog-statsd-metrics
-  (t/testing "datadog monitoring functions"
+(deftest datadog-statsd-metrics
+  (testing "datadog monitoring functions"
     (stest/instrument `sut/str-array)
     (stest/instrument `sut/increment)
     (stest/instrument `sut/decrement)
@@ -50,7 +50,7 @@
     (stest/check `sut/gauge)
     (stest/check `sut/histogram)
 
-    (t/are [x y] (= x y)
+    (are [x y] (= x y)
       nil (sut/increment "asdf")
       nil (sut/increment "asdf" {:tags ["asdf"] :sample-rate 1})
 
