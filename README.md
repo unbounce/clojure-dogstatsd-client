@@ -35,6 +35,9 @@ Somewhere in your code, you should setup the client:
 (statsd/time "a.timed.body" {}
   (Thread/sleep 100)
   (Thread/sleep 100))
+
+;; Shutdown client to ensure all messages are emitted to statsd and resources are cleaned up
+(statsd/shutdown!)
 ```
 
 ### Ring Middleware
