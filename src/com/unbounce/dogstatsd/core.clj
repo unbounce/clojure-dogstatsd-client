@@ -12,6 +12,14 @@
 (defn ^"[Ljava.lang.String;" str-array [tags]
   (into-array String tags))
 
+(defn shutdown!
+  "Cleanly stops the statsd client.
+
+  May throw an exception if the socket cannot be closed."
+  []
+  (when client
+    (.stop client)))
+
 (defn setup!
   "Sets up the statsd client.
 
@@ -26,8 +34,7 @@
   "
   [& {:keys [^String host ^long port ^String prefix #^"[Ljava.lang.String;" tags once?]}]
   (when-not (and client once?)
-    (when client
-      (.stop client))
+    (shutdown!)
     (alter-var-root #'client (constantly
                               (com.timgroup.statsd.NonBlockingStatsDClient.
                                prefix
