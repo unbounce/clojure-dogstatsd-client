@@ -17,11 +17,6 @@
   (:require [com.unbounce.dogstatsd.core :as statsd])
   (:import [java.util.concurrent ThreadLocalRandom]))
 
-(defn sample? [sample-rate]
-  (if sample-rate
-    (< (.nextFloat (ThreadLocalRandom/current)) sample-rate)
-    true))
-
 (defn healthcheck-request?
   "Returns true if the healthcheck request is for a known health-check.
 
@@ -77,7 +72,7 @@
    (let [loggable? (or loggable? (complement healthcheck-request?))]
      (fn
        ([request]
-        (if-not (and (sample? sample-rate) (loggable? request))
+        (if-not (loggable? request)
           (handler request)
           (let [start (System/currentTimeMillis)]
             (statsd/increment "http.count" options)
@@ -93,7 +88,7 @@
                   (statsd/histogram "http.duration" elapsed options)))))))
 
        ([request respond raise]
-        (if-not (and (sample? sample-rate) (loggable? request))
+        (if-not (loggable? request)
           (let [start (System/currentTimeMillis)]
             (statsd/increment "http.count" options)
             (handler request

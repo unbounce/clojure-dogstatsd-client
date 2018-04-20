@@ -12,13 +12,6 @@
     "http.4xx" 404
     "http.5xx" 503))
 
-(deftest sample?
-  (dotimes [i 20]
-    (is (false? (sut/sample? 0))))
-  (dotimes [i 20]
-    (is (true? (sut/sample? 100))))
-  (is (true? (sut/sample? nil))))
-
 (deftest wrap-http-metrics
   (let [response (atom nil)
         metrics  (atom {})
