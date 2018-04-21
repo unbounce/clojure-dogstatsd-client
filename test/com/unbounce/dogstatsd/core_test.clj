@@ -62,3 +62,18 @@
 
       nil (sut/histogram "asdf" 20)
       nil (sut/histogram "asdf" 20 {:tags ["asdf" "asdf"] :sample-rate 1}))))
+
+(deftest time!
+  (let [result (atom nil)]
+    (with-redefs [sut/histogram (fn [m v & opt] (reset! result m))]
+      (testing "time! records duration of body"
+        (sut/time! ["foo"]
+          (Thread/sleep 100))
+        (is (= "foo" @result)))
+
+      (testing "time! records when exception is raised"
+        (is (thrown? RuntimeException
+                     (sut/time! ["bar"]
+                       (Thread/sleep 100)
+                       (throw (RuntimeException. "bar")))))
+        (is (= "bar" @result))))))

@@ -96,10 +96,11 @@
   "
   {:style/indent 1}
   [[metric opts] & body]
-  `(let [t0#  (System/currentTimeMillis)
-         res# (do ~@body)]
-     (histogram ~metric (- (System/currentTimeMillis) t0#) ~opts)
-     res#))
+  `(let [t0#  (System/currentTimeMillis)]
+     (try
+       ~@body
+       (finally
+         (histogram ~metric (- (System/currentTimeMillis) t0#) ~opts)))))
 
 (defn event
   "Records an Event.
