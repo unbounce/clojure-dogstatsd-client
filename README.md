@@ -32,7 +32,7 @@ Somewhere in your code, you should setup the client:
 (statsd/histogram "a.histogram" 10)
 
 ;; Time how long body takes and records it to the metric
-(statsd/time! ["a.timed.body"] {}
+(statsd/time! ["a.timed.body" {}]
   (Thread/sleep 100)
   (Thread/sleep 100))
 
