@@ -90,7 +90,7 @@
   (statsd/time! [\"my.metric\"]
     (Thread/sleep 1000))
 
-  (statsd/time! [\"my.metric.with.tags\" {:tags #{\"foo\" :sample-rate 0.3}}]
+  (statsd/time! [\"my.metric.with.tags\" {:tags #{\"foo\"} :sample-rate 0.3}]
     (Thread/sleep 1000))
 
   "

@@ -35,6 +35,10 @@ Somewhere in your code, you should setup the client:
 (statsd/time! ["a.timed.body" {}]
   (Thread/sleep 100)
   (Thread/sleep 100))
+  
+;; Time how long it takes with a tag/sample-rate
+(statsd/time! ["my.metric.with.tags" {:tags #{"foo"} :sample-rate 0.3}}]
+  (Thread/sleep 1000))
 
 ;; Shutdown client to ensure all messages are emitted to statsd and resources are cleaned up
 (statsd/shutdown!)
