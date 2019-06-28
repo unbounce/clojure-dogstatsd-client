@@ -19,6 +19,7 @@ Somewhere in your code, you should setup the client:
 
 ;; Do this once in your code
 ;; Or statd calls will default to use NoOpStatsDClient to avoid nullpointer exception
+;; You can also configure the host/port by setting the environment variables: DD_AGENT_HOST and DD_DOGSTATSD_PORT
 (statsd/setup! :host "127.0.0.1" :port 8125 :prefix "my.app")
 
 ;; Increment or derement a counter
