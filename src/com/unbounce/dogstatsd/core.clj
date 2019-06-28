@@ -23,24 +23,28 @@
 (defn setup!
   "Sets up the statsd client.
 
-  By default, assumes localhost and port 8125. You can change the host and port with:
+  If :host is not explicitly specified, it will defer to the environment variable DD_AGENT_HOST.
+  If :port is not explicitly specified, it will first try to read it from the env var DD_DOGSTATSD_PORT, and then fallback to the default port 8125.
+
+  Examples:
+
+  To setup the client on host \"some-other-post\" and port 1234
 
     (setup! :host \"some-other-host\" :port 1234)
 
   To setup the client once and avoid reloading it, use :once?
 
-    (setup! :once? true)
-
+    (setup! :host \"some-other-host\" :once? true)
   "
-  [& {:keys [^String host ^long port ^String prefix #^"[Ljava.lang.String;" tags once?]}]
+  [& {:keys [^String host ^long port ^String prefix tags once?]}]
   (when-not (and client once?)
     (shutdown!)
     (alter-var-root #'client (constantly
                               (com.timgroup.statsd.NonBlockingStatsDClient.
                                prefix
-                               (or host "localhost")
-                               (or port 8125)
-                               tags)))))
+                               host
+                               (or port 0)
+                               (str-array tags))))))
 
 (defn increment
   ([metric]
@@ -165,9 +169,11 @@
   (.recordSetValue client metric value tags))
 
 (comment
-  (setup!)
+  (setup! :host "localhost" :port 8125 :tags #{"hello" "world"})
 
+  ;; In a terminal, setup `nc -u -l 8125` to watch for events
   (event {:title "foo" :text "things are bad\nfoo"} nil)
+  (increment "foo.bar")
 
   (service-check {:name "hi" :status :warning} nil)
   (service-check {:name "hi" :status :ok :timestamp 10 :check-run-id 123 :message "foo" :hostname "blah"} nil)
