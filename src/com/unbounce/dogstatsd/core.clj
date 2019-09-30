@@ -1,4 +1,5 @@
 (ns com.unbounce.dogstatsd.core
+  (:require [clojure.string :as string])
   (:import [com.timgroup.statsd
             StatsDClient NonBlockingStatsDClient NoOpStatsDClient
             Event Event$Priority Event$AlertType
@@ -106,6 +107,9 @@
        (finally
          (histogram ~metric (- (System/currentTimeMillis) t0#) ~opts)))))
 
+(defn- enum-value [s]
+  (string/upper-case (name s)))
+
 (defn event
   "Records an Event.
 
@@ -113,9 +117,9 @@
 
   See http://docs.datadoghq.com/guides/dogstatsd/#events-1
 
-  Note:
   :date can either be inst? or msecs
-  :priority can be either :normal or :low
+  :priority    one of :normal or low. If unset, defaults to :normal
+  :alert-type  one of :error, :warning, :info, or :success. If unset, defaults to :info
   "
   [{:keys [title text timestamp hostname aggregation-key priority source-type-name alert-type]} tags]
   {:pre [(not (nil? title)) (not (nil? text))]}
@@ -127,12 +131,12 @@
                   (.withAggregationKey aggregation-key)
                   (.withPriority (if priority
                                    (Event$Priority/valueOf
-                                    (name priority))
+                                    (enum-value priority))
                                    Event$Priority/NORMAL))
                   (.withSourceTypeName source-type-name)
                   (.withAlertType (if alert-type
                                     (Event$AlertType/valueOf
-                                     (name source-type-name))
+                                     (enum-value alert-type))
                                     Event$AlertType/INFO))
                   (.withDate ^long timestamp)
                   (.build))]
@@ -173,6 +177,15 @@
 
   ;; In a terminal, setup `nc -u -l 8125` to watch for events
   (event {:title "foo" :text "things are bad\nfoo"} nil)
+
+  ;; With alert-type
+  (event {:title "foo" :text "things are bad\nfoo" :alert-type :warning} nil)
+  (event {:title "foo" :text "things are bad\nfoo" :alert-type :WARNING} nil)
+
+  ;; With priority
+  (event {:title "foo" :text "things are bad\nfoo" :priority :low} nil)
+  (event {:title "foo" :text "things are bad\nfoo"} nil)
+
   (increment "foo.bar")
 
   (service-check {:name "hi" :status :warning} nil)
