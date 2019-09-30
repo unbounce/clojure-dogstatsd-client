@@ -1,4 +1,4 @@
-(defproject com.unbounce/clojure-dogstatsd-client "0.6.1"
+(defproject com.unbounce/clojure-dogstatsd-client "0.6.2-SNAPSHOT"
   :description "A thin veneer over java-dogstatsd-client"
   :url "https://github.com/unbounce/clojure-dogstatsd-client"
   :license {:name "The MIT License (MIT)"
