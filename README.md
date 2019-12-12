@@ -24,6 +24,7 @@ Somewhere in your code, you should setup the client:
 
 ;; Increment or derement a counter
 (statsd/increment "counter")
+(statsd/increment "counter" {:by 2.5 :sample-rate 3.3 :tags ["foo" "bar"]})
 (statsd/decrement "another.counter")
 
 ;; Records a value at given time
@@ -36,7 +37,7 @@ Somewhere in your code, you should setup the client:
 (statsd/time! ["a.timed.body" {}]
   (Thread/sleep 100)
   (Thread/sleep 100))
-  
+
 ;; Time how long it takes with a tag/sample-rate
 (statsd/time! ["my.metric.with.tags" {:tags #{"foo"} :sample-rate 0.3}}]
   (Thread/sleep 1000))
@@ -73,7 +74,7 @@ Usage:
 ;; when sample-rate is set, only 20% of requests will be instrumented
 (def handler (-> (constantly {:status 200})
                  (dogstatsd.ring/wrap-http-metrics {:sample-rate 0.2})))
-                 
+
 ```
 
 

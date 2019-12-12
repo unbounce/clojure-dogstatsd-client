@@ -41,7 +41,7 @@
   (when-not (and client once?)
     (shutdown!)
     (alter-var-root #'client (constantly
-                              (com.timgroup.statsd.NonBlockingStatsDClient.
+                              (NonBlockingStatsDClient.
                                prefix
                                host
                                (or port 0)
@@ -49,21 +49,21 @@
 
 (defn increment
   ([metric]
-   (.incrementCounter client metric -empty-array))
-  ([metric {:keys [tags sample-rate]}]
+   (increment metric {}))
+  ([metric {:keys [tags sample-rate by] :or {by 1.0}}]
    (let [tags (str-array tags)]
      (if sample-rate
-       (.incrementCounter client metric sample-rate tags)
-       (.incrementCounter client metric tags)))))
+       (.count client ^String metric ^double by ^double sample-rate tags)
+       (.count client ^String metric ^double by tags)))))
 
 (defn decrement
   ([metric]
-   (.decrementCounter client metric -empty-array))
-  ([metric {:keys [tags sample-rate]}]
+   (decrement metric {}))
+  ([metric {:keys [tags sample-rate by] :or {by 1.0}}]
    (let [tags (str-array tags)]
      (if sample-rate
-       (.decrementCounter client metric sample-rate tags)
-       (.decrementCounter client metric tags)))))
+       (.count client ^String metric ^double (- by) ^double sample-rate tags)
+       (.count client ^String metric ^double (- by) tags)))))
 
 (defn gauge
   ([^String metric ^Double value]
