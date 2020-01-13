@@ -22,10 +22,10 @@ Somewhere in your code, you should setup the client:
 ;; You can also configure the host/port by setting the environment variables: DD_AGENT_HOST and DD_DOGSTATSD_PORT
 (statsd/setup! :host "127.0.0.1" :port 8125 :prefix "my.app")
 
-;; Increment or derement a counter
-(statsd/increment "counter")
-(statsd/increment "counter" {:by 2.5 :sample-rate 3.3 :tags ["foo" "bar"]})
-(statsd/decrement "another.counter")
+;; Increment or decrement a counter
+(statsd/increment "counter")           ; increment by 1
+(statsd/increment "counter" {:by 2.5}) ; increment by 2.5
+(statsd/decrement "another.counter")   ; decrement by 1
 
 ;; Records a value at given time
 (statsd/gauge "a.gauge" 10)
