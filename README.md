@@ -22,9 +22,10 @@ Somewhere in your code, you should setup the client:
 ;; You can also configure the host/port by setting the environment variables: DD_AGENT_HOST and DD_DOGSTATSD_PORT
 (statsd/setup! :host "127.0.0.1" :port 8125 :prefix "my.app")
 
-;; Increment or derement a counter
-(statsd/increment "counter")
-(statsd/decrement "another.counter")
+;; Increment or decrement a counter
+(statsd/increment "counter")           ; increment by 1
+(statsd/increment "counter" {:by 2.5}) ; increment by 2.5
+(statsd/decrement "another.counter")   ; decrement by 1
 
 ;; Records a value at given time
 (statsd/gauge "a.gauge" 10)
@@ -36,7 +37,7 @@ Somewhere in your code, you should setup the client:
 (statsd/time! ["a.timed.body" {}]
   (Thread/sleep 100)
   (Thread/sleep 100))
-  
+
 ;; Time how long it takes with a tag/sample-rate
 (statsd/time! ["my.metric.with.tags" {:tags #{"foo"} :sample-rate 0.3}}]
   (Thread/sleep 1000))
@@ -73,7 +74,7 @@ Usage:
 ;; when sample-rate is set, only 20% of requests will be instrumented
 (def handler (-> (constantly {:status 200})
                  (dogstatsd.ring/wrap-http-metrics {:sample-rate 0.2})))
-                 
+
 ```
 
 
