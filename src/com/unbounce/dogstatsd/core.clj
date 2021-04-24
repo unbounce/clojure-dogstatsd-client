@@ -1,9 +1,9 @@
 (ns com.unbounce.dogstatsd.core
   (:require [clojure.string :as string])
   (:import [com.timgroup.statsd
-            StatsDClient NonBlockingStatsDClient NoOpStatsDClient
+            StatsDClient NoOpStatsDClient
             Event Event$Priority Event$AlertType
-            ServiceCheck ServiceCheck$Status]))
+            ServiceCheck ServiceCheck$Status NonBlockingStatsDClientBuilder]))
 
 ;; In case setup! is not called, this prevents nullpointer exceptions i.e. Unit tests
 (defonce ^:private ^StatsDClient client (NoOpStatsDClient.))
@@ -41,11 +41,12 @@
   (when-not (and client once?)
     (shutdown!)
     (alter-var-root #'client (constantly
-                              (NonBlockingStatsDClient.
-                               prefix
-                               host
-                               (or port 0)
-                               (str-array tags))))))
+                               (-> (NonBlockingStatsDClientBuilder.)
+                                   (.prefix prefix)
+                                   (.hostname host)
+                                   (.port (or port 0))
+                                   (.constantTags (str-array tags))
+                                   (.build))))))
 
 (defn increment
   ([metric]
